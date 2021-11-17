@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+{% block content%}
+<div class="container p-2">
+    {% if not articles %}
+    <div class="d-flex flex-column justify-content-center align-items-center" style="height: 75vh;">
+        <h2>Aucun article n'a été publié pour le moment, soyez le premier à en créer un</h2>
+        <img src="../images/writeArticle.png" style="height: 250px; width: 250px;" alt="aucun_article">
+        <a class="btn btn-success" href="/admin-nouveau">Créer un article</a>
+    </div>
+    {% else %}
+    <div class="row d-flex justify-content-center">
+        <h2 class="font-italic m-3">Restez informés grâce à nos articles les plus récents sélectionnés pour vous</h2>
+        <div class="divider rounded w-50 bg-success py-1"></div>
+    </div>
+    {% for article in articles %}
+    <div class="card bg-secondary text-white text-center my-3">
+        <div class="card-header">
+            <span class="badge badge-pill badge-dark">id: {{article.id}}</span> - <span
+                class="badge badge-pill badge-dark">identifiant: {{article.identifiant}}</span>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title font-weight-bold">{{article.titre}}</h5>
+            <p class="card-text font-italic">"{{article.paragraphe}}"</p>
+        </div>
+        <div class="card-footer text-white">
+            {{article.auteur}}, {{article.date_publication}}
+        </div>
+    </div>
+    <div class="row d-flex justify-content-center flex-nowrap">
+        <div class="divider rounded w-25 bg-success py-1"></div>
+    </div>
+    {% endfor %}
+    {% endif %}
+</div>
+
+{% endblock%}
