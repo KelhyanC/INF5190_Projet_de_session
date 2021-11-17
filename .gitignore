@@ -1,0 +1,5 @@
+*.swp
+.vagrant/
+.DS_Store
+*.pyc
+*.db
