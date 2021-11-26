@@ -11,7 +11,7 @@ class Database:
 
     def get_connection(self):
         if self.connection is None:
-            self.connection = sqlite3.connect('database/activite.db')
+            self.connection = sqlite3.connect('db/db.db')
             self.connection.row_factory = sqlite3.Row
         return self.connection
 
