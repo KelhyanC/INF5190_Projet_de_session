@@ -13,6 +13,7 @@ import csv
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from urllib import request as r
+from apscheduler.schedulers.background import BackgroundScheduler
 
 
 app = Flask(__name__, static_url_path="", static_folder="static")
@@ -113,6 +114,14 @@ def load_piscines():
         db.session.commit()
 
 
+def load_datas_scheduler():
+    print("Mise à jour période des données tous les jours à 00:00 :")
+    load_patinoires()
+    load_glissades()
+    load_piscines()
+    print("Mise à jour périodique terminée")
+
+
 if(isfile('db/database.db') == False):
     print("Base de donnée inexistante : initialisation en cours...")
     db.create_all()
@@ -120,6 +129,14 @@ if(isfile('db/database.db') == False):
     load_glissades()
     load_piscines()
     print("Base de donnée correctement créée et chargée")
+
+scheduler = BackgroundScheduler()
+job = job = scheduler.add_job(
+    load_datas_scheduler, 'cron', day_of_week='mon-sun')
+scheduler.start()
+
+
+# AFFICHER LES 3 DERNIERES DONNEES MAJ DE CHAQUE CATEGORIE PAR BACKGROUND SCHEDULER
 
 
 @app.route("/")
