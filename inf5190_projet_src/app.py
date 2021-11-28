@@ -41,11 +41,22 @@ class Activite(db.Model):
         self.ajout_bd = ajout_bd
 
 
+# Permet de lire les tres gros fichiers morceau par morceau
+def download_large_file(filename, url):
+    comp_file = './data/'+filename
+    with requests.get(url, stream=True) as req:
+        with open(comp_file, 'wb') as f:
+            for it in req.iter_content(chunk_size=1024):
+                f.write(it)
+    return comp_file
+
+
 def load_patinoires():
     print("Chargement des patinoires : ")
-    req_patinoire = requests.get(
-        "https://data.montreal.ca/dataset/225ac315-49fe-476f-95bd-a1ce1648a98c/resource/5d1859cc-2060-4def-903f-db24408bacd0/download/l29-patinoire.xml")
-    root = ET.fromstring(req_patinoire.content)
+    content = download_large_file(
+        'patinoires.xml', "https://data.montreal.ca/dataset/225ac315-49fe-476f-95bd-a1ce1648a98c/resource/5d1859cc-2060-4def-903f-db24408bacd0/download/l29-patinoire.xml")
+    root = ET.parse(content)
+    patinoires = []
     for arrondissement in root.findall('arrondissement'):
         id = random.randint(1, 30000)
         nom_arr = str.strip(arrondissement.find('nom_arr').text)
@@ -55,20 +66,22 @@ def load_patinoires():
                        nom=nom, arrondissement=nom_arr, ajout_bd=datetime.now())
         if(Activite.query.filter_by(nom=act.nom).first() is None):
             print("N'existe pas dans BD : ajout")
-            db.session.add(act)
+            patinoires.append(act)
         print(id)
         print(nom_arr)
         print(type)
         print(nom)
         print("============")
+    db.session.add_all(patinoires)
     db.session.commit()
 
 
 def load_glissades():
     print("Chargement des glissades : ")
-    req_glissade = requests.get(
-        "http://www2.ville.montreal.qc.ca/services_citoyens/pdf_transfert/L29_GLISSADE.xml")
-    root = ET.fromstring(req_glissade.content)
+    content = download_large_file(
+        'glissades.xml', "http://www2.ville.montreal.qc.ca/services_citoyens/pdf_transfert/L29_GLISSADE.xml")
+    root = ET.parse(content)
+    glissades = []
     for glissade in root.findall('glissade'):
         id = random.randint(30001, 100000)
         nom_arr = glissade.find('arrondissement').find('nom_arr').text
@@ -78,12 +91,13 @@ def load_glissades():
                        nom=nom, arrondissement=nom_arr, ajout_bd=datetime.now())
         if(Activite.query.filter_by(nom=act.nom).first() is None):
             print("N'existe pas dans BD : ajout")
-            db.session.add(act)
+            glissades.append(act)
         print(id)
         print(nom_arr)
         print(type)
         print(nom)
         print("----------")
+    db.session.add_all(glissades)
     db.session.commit()
 
 
@@ -92,12 +106,14 @@ def load_piscines():
     path = 'https://data.montreal.ca/dataset/4604afb7-a7c4-4626-a3ca-e136158133f2/resource/cbdca706-569e-4b4a-805d-9af73af03b14/download/piscines.csv'
     dest = './data/piscines.csv'
     r.urlretrieve(path, dest)
+    piscines = []
     with open(dest, "r") as csv_piscine:
         next(csv_piscine)
         reader = csv.reader(csv_piscine, delimiter=',')
         for row in reader:
             # Pour éviter de traiter les doublons dans ID du fichier
-            id = random.randint(6000000, 9999990)
+            id = random.randint(6000000, 9999990) + \
+                random.randint(0, 9999999)
             nom_arr = row[3]
             type = row[1]
             nom = row[2]
@@ -105,12 +121,13 @@ def load_piscines():
                            nom=nom, arrondissement=nom_arr, ajout_bd=datetime.now())
             if(Activite.query.filter_by(nom=act.nom).first() is None):
                 print("N'existe pas dans BD : ajout")
-                db.session.add(act)
+                piscines.append(act)
             print(id)
             print(nom_arr)
             print(type)
             print(nom)
             print("***********")
+        db.session.add_all(piscines)
         db.session.commit()
 
 
