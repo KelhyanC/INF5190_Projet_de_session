@@ -161,5 +161,10 @@ def accueil():
     return render_template("index.html")
 
 
+@app.route("/doc")
+def read_the_doc():
+    return render_template("doc.html")
+
+
 if __name__ == "__main__":
     app.run(debug=True)

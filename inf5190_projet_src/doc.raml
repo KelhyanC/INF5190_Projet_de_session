@@ -1,0 +1,167 @@
+#%RAML 1.0
+title: API REST - INF5190 - Projet de session
+mediaType: application/json
+types:
+  ActiviteExistante:
+    properties:
+      type_installation:
+        type: string
+        required: true
+      nom:
+        type: string
+        required: true
+      arrondissement:
+        type: string
+        required: true
+  Activite:
+    properties:
+      id:
+        type: number
+        required: true
+      type_installation:
+        type: string
+        required: true
+      nom:
+        type: string
+        required: true
+      arrondissement:
+        type: string
+        required: true
+      ajout_bd:
+        type: date
+        required: true
+  Utilisateur:
+    properties:
+      nom_complet:
+        type: string
+        required: true
+      courriel:
+        type: string
+        required: true
+      arrondissements:
+        type: string[]
+        required: true
+  UtilisateurExistant:
+    properties:
+      id:
+        type: number
+        required: true
+      nom_complet:
+        type: string
+        required: true
+      courriel:
+        type: string
+        required: true
+      arrondissements:
+        type: string[]
+        required: true
+/api:
+  /installations:
+    get:
+      description: Retourne la liste des installations pour un arrondissement spécifié en paramètre
+      responses:
+        200:
+          body:
+            application/json:
+              type: Activite[]
+        404:
+          description: L'arrondissement spécifié n'existe pas, aucune donnée n'a donc été trouvée
+    /{id}:
+      get:
+        description: Retourne les informations concernant une installation particulière selon son ID
+        responses:
+          200:
+            body:
+              application/json:
+                type: Activite
+          404:
+            description: Aucune installation ne correspond à cet identifiant
+      patch:
+        description: Modifie les informations d'une installation (glissades,piscines, installations aquatiques)
+        body:
+          application/json:
+            type: ActiviteExistante
+            example:
+              type_installation: Tobogan
+              nom: Tobogan des fous
+              arrondissement: Mont-Royal
+        responses:
+          200: 
+            description: Les informations de l'installation ont correctement été mises à jour
+            body:
+              application/json:
+                type: Activite
+                example:
+                  id: 12345
+                  type_installation: Tobogan
+                  nom: Tobogan des fous
+                  arrondissement: Mont-Royal
+                  ajout_bd: 2021-01-01 01:00:00
+          400: 
+            description: Les données fournies sont invalides
+          404:
+            description: L'installation spécifiée n'existe pas
+      delete:
+        description: Supprime complètement une installation
+        responses:
+          200:
+            description: Les données relatives à une installation ont correctement été supprimées
+            body:
+              application/json:
+                type: Activite
+                example:
+                  id: 98745
+                  type: glissade
+                  nom: glissade de dingues
+                  arrondissement: Lasalle
+                  ajout_bd: 2021-01-01 01:00:00
+          404:
+            description: L'installation spécifiée n'existe pas
+  /2021:
+    /installations:
+      get:
+        description: Retourne la liste des installations mises à jour en 2021 triées en ordre alphabetique
+        responses:
+          200:
+            body:
+              application/json:
+                type: Activite[]
+  /Utilisateur:
+    post:
+      description: Crée un profil Utilisateur
+      body:
+        application/json:
+          type: Utilisateur
+          example:
+            nom_complet: Jack Sparrow
+            courriel: Jack@pirate.com
+            arrondissement: [Mont-Royal, Lasalle, Ahuntsic-Cartierville]
+      responses:
+        201:
+          description: Le profil Utilisateur a correctement été créé
+          body:
+            application/json:
+              type: UtilisateurExistant
+              example:
+                id: 00001
+                nom_complet: Jack Sparrow
+                courriel: Jack@pirate.com
+                arrondissement: [Mont-Royal, Lasalle, Ahuntsic-Cartierville]
+        400:
+          description: Les données fournies sont invalides
+    /{id}:
+      delete:
+        description: Supprime le profil d'un utilisateur existant
+        responses:
+          200:
+            description: Le profil utilisateur a correctement été supprimé
+            body:
+              application/json:
+                type: UtilisateurExistant
+                example:
+                  id: 00001
+                  nom_complet: Jack Sparrow
+                  courriel: Jack@pirate.com
+                  arrondissement: [Mont-Royal, Lasalle, Ahuntsic-Cartierville]
+          404:
+            description: Aucun utilisateur ne correspond à cet identifiant
