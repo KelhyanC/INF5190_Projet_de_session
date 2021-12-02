@@ -5,6 +5,7 @@ from flask import render_template
 from flask import g
 from flask import request
 from flask import redirect
+from flask import jsonify
 from flask.helpers import url_for
 import requests
 import xml.etree.ElementTree as ET
@@ -40,8 +41,18 @@ class Activite(db.Model):
         self.arrondissement = arrondissement
         self.ajout_bd = ajout_bd
 
+    def transformation(self):
+        rep = {
+            "id": str(self.id).encode().decode('UTF-8'),
+            "type_installation": str(self.type_installation).encode().decode('UTF-8'),
+            "nom": str(self.nom).encode().decode('UTF-8'),
+            "ajout_bd": str(self.ajout_bd).encode().decode('UTF-8')
+        }
+        return rep
 
 # Permet de lire les tres gros fichiers morceau par morceau
+
+
 def download_large_file(filename, url):
     comp_file = './data/'+filename
     with requests.get(url, stream=True) as req:
@@ -164,6 +175,17 @@ def accueil():
 @app.route("/doc")
 def read_the_doc():
     return render_template("doc.html")
+
+
+@app.route("/api/installations")
+def get_installations():
+    arr = request.args['arrondissement']
+    arrondissements = Activite.query.filter_by(arrondissement=arr).all()
+    if arr.strip() == "" or not arr or arrondissements is None or len(arrondissements) == 0:
+        return jsonify({"Erreur": "Arrondissement invalide"}), 404
+    else:
+        print(arrondissements)
+        return jsonify([it.transformation() for it in arrondissements]), 200
 
 
 if __name__ == "__main__":
