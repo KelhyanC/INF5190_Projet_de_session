@@ -56,7 +56,7 @@ types:
         type: string[]
         required: true
 /api:
-  /installations:
+  /installations?arrondissement={nom_arrondissement}:
     get:
       description: Retourne la liste des installations pour un arrondissement spécifié en paramètre
       responses:
@@ -66,6 +66,7 @@ types:
               type: Activite[]
         404:
           description: L'arrondissement spécifié n'existe pas, aucune donnée n'a donc été trouvée
+  /installation:
     /{id}:
       get:
         description: Retourne les informations concernant une installation particulière selon son ID
