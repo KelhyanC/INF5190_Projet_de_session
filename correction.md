@@ -17,5 +17,9 @@ Pour des raisons d'incompatibilité et de manque de configuration avec l'environ
 ### Test
 Rendez-vous à sur la route `/doc` pour voir le résultat
 
+# A3
+
+J'ai facilité la recherche d'installations par arrondissement, en permettant l'insensibilité à la case lors de la recherche dans la BD du paramètre du Query String
+
 
 Installation = environ Activité

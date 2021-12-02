@@ -16,10 +16,13 @@ from datetime import datetime
 from urllib import request as r
 from apscheduler.schedulers.background import BackgroundScheduler
 
-
+# Configuration de l'app
 app = Flask(__name__, static_url_path="", static_folder="static")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db/database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Permet de retourner du JSON en UTF-8
+app.config['JSON_AS_ASCII'] = False
 
 # Connexion à la BD
 db = SQLAlchemy(app)
@@ -41,16 +44,19 @@ class Activite(db.Model):
         self.arrondissement = arrondissement
         self.ajout_bd = ajout_bd
 
+    # Transforme le modele en objet compatible avec le format JSON
     def transformation(self):
         rep = {
-            "id": str(self.id).encode().decode('UTF-8'),
-            "type_installation": str(self.type_installation).encode().decode('UTF-8'),
-            "nom": str(self.nom).encode().decode('UTF-8'),
-            "ajout_bd": str(self.ajout_bd).encode().decode('UTF-8')
+            "id": str(self.id),
+            "type_installation": self.type_installation,
+            "nom": self.nom,
+            "arrondissement": self.arrondissement,
+            "ajout_bd": str(self.ajout_bd)
         }
         return rep
 
-# Permet de lire les tres gros fichiers morceau par morceau
+# Permet de lire les gros fichiers morceau par morceau
+# pour prevenir les problemes memoires
 
 
 def download_large_file(filename, url):
@@ -60,6 +66,10 @@ def download_large_file(filename, url):
             for it in req.iter_content(chunk_size=1024):
                 f.write(it)
     return comp_file
+
+# Charge les patinoires a partir d'une requete GET
+# et les stocke dans le fichier patinoires.xml
+# Puis ajoute les patinoires dans la BD si elles n'y existent pas
 
 
 def load_patinoires():
@@ -87,6 +97,9 @@ def load_patinoires():
     db.session.commit()
 
 
+# Charge les glissades a partir d'une requete GET
+# et les stocke dans le fichier glissades.xml
+# Puis ajoute les glissades dans la BD si elles n'y existent pas
 def load_glissades():
     print("Chargement des glissades : ")
     content = download_large_file(
@@ -112,6 +125,8 @@ def load_glissades():
     db.session.commit()
 
 
+# Telecharge les piscines en format csv a partir d'une requete GET
+# Puis les ajoute dans la BD si elles n'y existent pas
 def load_piscines():
     print("Chargement des piscines : ")
     path = 'https://data.montreal.ca/dataset/4604afb7-a7c4-4626-a3ca-e136158133f2/resource/cbdca706-569e-4b4a-805d-9af73af03b14/download/piscines.csv'
@@ -142,6 +157,8 @@ def load_piscines():
         db.session.commit()
 
 
+# Fonction du Background Scheduler qui ajoute les patinoires, glissades et pisines
+# qui n'existent pas dans la BD
 def load_datas_scheduler():
     print("Mise à jour période des données tous les jours à 00:00 :")
     load_patinoires()
@@ -150,6 +167,8 @@ def load_datas_scheduler():
     print("Mise à jour périodique terminée")
 
 
+# Vérifie si la base de donnée existe, sinon la crée et charge toutes les données
+# Le chargement des données peut être long
 if(isfile('db/database.db') == False):
     print("Base de donnée inexistante : initialisation en cours...")
     db.create_all()
@@ -158,6 +177,7 @@ if(isfile('db/database.db') == False):
     load_piscines()
     print("Base de donnée correctement créée et chargée")
 
+# Charge les données inexistante dans la BD tous les jours à minuit
 scheduler = BackgroundScheduler()
 job = job = scheduler.add_job(
     load_datas_scheduler, 'cron', day_of_week='mon-sun')
@@ -180,7 +200,8 @@ def read_the_doc():
 @app.route("/api/installations")
 def get_installations():
     arr = request.args['arrondissement']
-    arrondissements = Activite.query.filter_by(arrondissement=arr).all()
+    arrondissements = Activite.query.filter(
+        Activite.arrondissement.ilike(arr)).all()
     if arr.strip() == "" or not arr or arrondissements is None or len(arrondissements) == 0:
         return jsonify({"Erreur": "Arrondissement invalide"}), 404
     else:
