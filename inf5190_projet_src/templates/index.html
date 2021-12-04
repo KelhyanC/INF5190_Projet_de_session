@@ -21,34 +21,32 @@
     }
 </style>
 <div class="container-fluid pb-4 d-flex flex-column">
-    <div class="container-fluid d-flex flex-row align-items-start justify-content-between">
-        <div class="bg-light p-4 col-5">
+    <div class="d-md-flex flex-md-row align-items-md-start justify-content-md-between">
+        <div class="bg-light p-4 col-md-5">
             <label class="form-label text-primary font-weight-bold" for="arrondissement">Cherchez des installations par
                 nom
                 d'arrondissement</label>
             <div class="input-group mb-3">
                 <input type="text" class="form-control" placeholder="Nom d'arrondissement..."
-                    aria-label="Nom arrondissement" aria-describedby="button-addon2" name="arrondissement">
+                    aria-label="Nom arrondissement" name="arrondissement">
                 <button class="btn btn-primary" onclick="getInstallationsByArr()" type="button"
                     id="btn-arr">Trouver</button>
             </div>
             <div id="arr_error" role="alert"></div>
         </div>
 
-        <div class="bg-dark rounded-circle text-white h4 p-3 mt-5">OU</div>
+        <div class="bg-dark rounded-circle text-white text-center h4 p-3 mt-md-5">OU</div>
 
-        <div class="bg-light p-4 col-5">
+        <div class="bg-light p-4 col-md-5">
             <label class="form-label text-primary font-weight-bold" for="nom_installation">Par nom
                 d'installation</label>
             <div class="input-group mb-3">
                 <select class="form-control" id="nom_installation">
-                    <option>1</option>
-                    <option>2</option>
-                    <option>3</option>
-                    <option>4</option>
-                    <option>5</option>
+                    {% for installation in installations %}
+                    <option value="{{installation.id}}">{{installation.nom}}</option>
+                    {% endfor %}
                 </select>
-                <button class="btn btn-outline-secondary" type="button">Trouver</button>
+                <button class="btn btn-outline-secondary" type="button" onclick="getInstallationById()">Trouver</button>
             </div>
         </div>
     </div>

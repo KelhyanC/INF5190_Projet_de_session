@@ -189,7 +189,8 @@ scheduler.start()
 
 @app.route("/")
 def accueil():
-    return render_template("index.html")
+    installations = Activite.query.all()
+    return render_template("index.html", installations=installations)
 
 
 @app.route("/doc")
@@ -207,6 +208,15 @@ def get_installations():
     else:
         print(arrondissements)
         return jsonify([it.transformation() for it in arrondissements]), 200
+
+
+@app.route("/api/installation/<id>")
+def get_installation(id):
+    installation = Activite.query.filter_by(id=id).first()
+    if(installation is None):
+        return jsonify({"Erreur": "Aucune installation ne correspond à cet identifiant"}), 404
+    else:
+        return jsonify(installation.transformation()), 200
 
 
 if __name__ == "__main__":
