@@ -15,6 +15,10 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from urllib import request as r
 from apscheduler.schedulers.background import BackgroundScheduler
+from flask_json_schema import JsonSchema
+from flask_json_schema import JsonValidationError
+
+from .schemas.update_activite import activite_update_schema
 
 # Configuration de l'app
 app = Flask(__name__, static_url_path="", static_folder="static")
@@ -27,9 +31,12 @@ app.config['JSON_AS_ASCII'] = False
 # Connexion à la BD
 db = SQLAlchemy(app)
 
+schema = JsonSchema(app)
 
 # Pas possible de mettre le model BD dans un module car
 # problème d'injection de dépendances entre BD, modèle et app
+
+
 class Activite(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     type_installation = db.Column(db.String, nullable=False)
@@ -186,6 +193,11 @@ scheduler.start()
 
 # AFFICHER LES 3 DERNIERES DONNEES MAJ DE CHAQUE CATEGORIE PAR BACKGROUND SCHEDULER
 
+@app.errorhandler(JsonValidationError)
+def validation_error(err):
+    errors = [validation_error.message for validation_error in err.errors]
+    return jsonify({'Erreur': err.message, 'Details_erreur': errors}), 400
+
 
 @app.route("/")
 def accueil():
@@ -210,13 +222,30 @@ def get_installations():
         return jsonify([it.transformation() for it in arrondissements]), 200
 
 
-@app.route("/api/installation/<id>")
+@app.route("/api/installation/<id>", methods=["GET", "PATCH", "DELETE"])
+@schema.validate(activite_update_schema)
 def get_installation(id):
     installation = Activite.query.filter_by(id=id).first()
     if(installation is None):
         return jsonify({"Erreur": "Aucune installation ne correspond à cet identifiant"}), 404
-    else:
+    elif request.method == "GET":
         return jsonify(installation.transformation()), 200
+    elif request.method == "PATCH":
+        req_data = request.get_json()
+        name = req_data['nom']
+        type_inst = req_data['type_installation']
+        if name.strip() == "" or type_inst.strip() == "":
+            return jsonify({"Erreur": "Les données fournies ne peuvent pas être vides"}), 400
+        Activite.query.filter_by(id=id).update(
+            dict(nom=name, type_installation=type_inst, ajout_bd=datetime.now()))
+        db.session.commit()
+        new_data = Activite.query.filter_by(id=id).first().transformation()
+        return jsonify(new_data), 200
+    elif request.method == "DELETE":
+        del_data = installation.transformation()
+        Activite.query.filter_by(id=id).delete()
+        db.session.commit()
+        return jsonify(del_data), 200
 
 
 if __name__ == "__main__":
