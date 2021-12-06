@@ -31,3 +31,5 @@ username : `superuser`
 password : `secret`
 
 Vous pouvez aussi vérifier dans le code l'objet `loginfo`, les informations de connexion y sont spécifiées.
+Votre navigateur peut stocker les données de connexion, et la saisie des identifiants ne serait plus nécessaire dans ce cas pour
+supprimer une installation.
