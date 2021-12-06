@@ -210,6 +210,15 @@ def read_the_doc():
     return render_template("doc.html")
 
 
+@app.route("/installation/<id>")
+def installation_details(id):
+    installation = Activite.query.filter_by(id=id).first()
+    if(installation is None):
+        return render_template("installation.html"), 404
+    else:
+        return render_template("installation.html", installation=installation), 200
+
+
 @app.route("/api/installations")
 def get_installations():
     arr = request.args['arrondissement']
@@ -218,7 +227,6 @@ def get_installations():
     if arr.strip() == "" or not arr or arrondissements is None or len(arrondissements) == 0:
         return jsonify({"Erreur": "Arrondissement invalide"}), 404
     else:
-        print(arrondissements)
         return jsonify([it.transformation() for it in arrondissements]), 200
 
 

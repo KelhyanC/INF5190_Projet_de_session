@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+{% block content%}
+
+<div class="container p-2">
+
+    {% if not installation %}
+    <div class="d-flex flex-column justify-content-center align-items-center" style="height: 75vh;">
+        <h2>Aucune installation ne correspond à cet identifiant</h2>
+        <img src="../images/not_found.png" style="height: 250px; width: 250px;" alt="article_non_trouve">
+    </div>
+    {% else %}
+    <div id="confirmation"></div>
+    <form>
+        <legend>Modification d'installation</legend>
+        <div class="mb-3">
+            <label for="id" class="form-label">ID</label>
+            <input type="text" id="id" class="form-control" value="{{installation.id}}" disabled>
+        </div>
+        <div class="mb-3">
+            <label for="type_installation" class="form-label">Type d'installation</label>
+            <input type="text" id="type_installation" class="form-control" value="{{installation.type_installation}}">
+            <div id="err_type"></div>
+        </div>
+        <div class="mb-3">
+            <label for="nom" class="form-label">Nom</label>
+            <input type="text" id="nom" class="form-control" value="{{installation.nom}}">
+            <div id="err_nom"></div>
+        </div>
+        <div class="mb-3">
+            <label for="arrondissement" class="form-label">Arrondissement</label>
+            <input type="text" id="arrondissement" class="form-control" value="{{installation.arrondissement}}"
+                disabled>
+        </div>
+        <div class="mb-3">
+            <label for="ajout_bd" class="form-label">Ajout BD</label>
+            <input type="text" id="ajout_bd" class="form-control" value="{{installation.ajout_bd}}" disabled>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="editInstallation()" id="zeboutton">Mettre à jour</button>
+    </form>
+    {% endif %}
+
+</div>
+
+{% endblock %}

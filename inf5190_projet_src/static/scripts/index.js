@@ -59,7 +59,7 @@ function getInstallationsByArr() {
                 <tr>
                     <td>${arr.nom}</td>
                     <td>${arr.type_installation}</td>
-                    <td><a class="btn btn-secondary mr-2" href="#">modifier</a><a class="btn btn-danger" href="#">supprimer</a></td>
+                    <td><a class="btn btn-secondary mr-2" href="/installation/${arr.id}">modifier</a><button class="btn btn-danger" onclick="deleteInstallation(${arr.id})">supprimer</button></td>
                 </tr>
             `);
             });
@@ -117,4 +117,83 @@ function getInstallationById() {
         showError("Une erreur est survenue, veuillez réessayer");
         console.log(err);
     });
+}
+
+function deleteInstallation(id) {
+    $("#status").removeClass();
+    $("#status").empty();
+    fetch(`/api/installation/${id}`, {
+        method: 'DELETE'
+    }).then(rep => {
+        if (!rep.ok) {
+            throw Error(rep.statusText);
+        }
+        return rep.json();
+    }).then(data => {
+        console.log(data);
+        setTimeout(function () {
+            $("#status").removeClass();
+            $("#status").empty();
+        }, 5000);
+        $("#status").addClass("alert alert-success");
+        $("#status").append(`L'installation <b>"${data.nom}"</b> a correctement été supprimée`);
+        getInstallationsByArr();
+    }).catch(err => {
+        $("#status").addClass("alert alert-danger");
+        $("#status").append(`Une erreur est survenue, l'installation n'a pas pu être supprimée`);
+        console.log(err);
+    });
+}
+
+function validation(input, tag) {
+    var it = $(`#${tag}`);
+    it.removeClass();
+    it.empty();
+    if (input.trim() == "") {
+        it.addClass("alert alert-danger");
+        it.append("Le champs ne peut pas être vide");
+        return false;
+    }
+    return true;
+}
+
+function editInstallation() {
+    var status = $("#confirmation");
+    status.removeClass();
+    status.empty();
+    var id = $("#id").val();
+    var name = $("#nom").val();
+    var type_inst = $("#type_installation").val();
+    var val1 = validation(name, "err_nom");
+    var val2 = validation(type_inst, "err_type");
+    if (val1 && val2) {
+        fetch(`/api/installation/${id}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                nom: name,
+                type_installation: type_inst
+            })
+        }).then(rep => {
+            if (!rep.ok) {
+                throw Error(rep.statusText);
+            }
+            return rep.json();
+        }).then(() => {
+            $("#type_installation").attr('disabled', true);
+            $("#nom").attr('disabled', true);
+            $("#zeboutton").hide();
+            status.addClass("alert alert-success");
+            status.append("L'installation a bien été modifiée");
+        }).catch(err => {
+            status.addClass("alert alert-warning");
+            status.append("Une erreur inattendue est survenue");
+            console.log(err)
+        });
+    } else {
+        status.addClass("alert alert-warning");
+        status.append("L'installation n'a pas été modifiée");
+    }
 }
