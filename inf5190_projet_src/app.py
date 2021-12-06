@@ -6,7 +6,7 @@ from flask import g
 from flask import request
 from flask import redirect
 from flask import jsonify
-from flask.helpers import url_for
+from flask.helpers import make_response, url_for
 import requests
 import xml.etree.ElementTree as ET
 import random
@@ -32,6 +32,12 @@ app.config['JSON_AS_ASCII'] = False
 db = SQLAlchemy(app)
 
 schema = JsonSchema(app)
+
+# identifiants de connexion pour suppression d'installation
+loginfo = {
+    "username": "superuser",
+    "password": "secret"
+}
 
 # Pas possible de mettre le model BD dans un module car
 # problème d'injection de dépendances entre BD, modèle et app
@@ -250,10 +256,14 @@ def get_installation(id):
         new_data = Activite.query.filter_by(id=id).first().transformation()
         return jsonify(new_data), 200
     elif request.method == "DELETE":
-        del_data = installation.transformation()
-        Activite.query.filter_by(id=id).delete()
-        db.session.commit()
-        return jsonify(del_data), 200
+        auth = request.authorization
+        if auth and auth.username == loginfo["username"] and auth.password == loginfo["password"]:
+            del_data = installation.transformation()
+            Activite.query.filter_by(id=id).delete()
+            db.session.commit()
+            return jsonify(del_data), 200
+        else:
+            return make_response('Permission refusée !', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
 
 if __name__ == "__main__":

@@ -24,3 +24,10 @@ J'ai facilité la recherche d'installations par arrondissement, en permettant l'
 
 
 Installation = environ Activité
+
+# D4
+
+username : `superuser`
+password : `secret`
+
+Vous pouvez aussi vérifier dans le code l'objet `loginfo`, les informations de connexion y sont spécifiées.
