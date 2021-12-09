@@ -10,9 +10,6 @@ types:
       nom:
         type: string
         required: true
-      arrondissement:
-        type: string
-        required: true
   Activite:
     properties:
       id:
@@ -28,7 +25,7 @@ types:
         type: string
         required: true
       ajout_bd:
-        type: date
+        type: datetime
         required: true
   Utilisateur:
     properties:
@@ -85,7 +82,6 @@ types:
             example:
               type_installation: Tobogan
               nom: Tobogan des fous
-              arrondissement: Mont-Royal
         responses:
           200: 
             description: Les informations de l'installation ont correctement été mises à jour

@@ -1,10 +1,12 @@
 var st = $("#state");
 
+//Affiche un message d'erreur en fonction de la cause
 function showError(why) {
     st.addClass("d-flex flex-column align-items-center justify-content-center");
     st.append(`<h2>${why}<h2> <img src=\"../images/not_found.png\" style=\"height: 250px; width: 250px; \" alt=\"Not_Found\">`);
 }
 
+//Affiche un loader lors d'une requete asynchrone
 function showLoader() {
     st.removeClass();
     st.empty();
@@ -12,6 +14,7 @@ function showLoader() {
     st.append("Chargement des données en cours...<div class= \"loader\" ></div >");
 }
 
+//Valide la saisie du formulaire du nom d'arrondissement
 function arr_validation(input) {
     $("#arr_error").removeClass();
     $("#arr_error").empty();
@@ -23,6 +26,7 @@ function arr_validation(input) {
     return true;
 }
 
+//Affiche les installations par arrondissement sous forme de tableau
 function getInstallationsByArr() {
 
     const arrondissement = String($('input[name="arrondissement"]').val());
@@ -70,6 +74,7 @@ function getInstallationsByArr() {
     }
 }
 
+//Affiche les informations d'une installation en fonction de son ID
 function getInstallationById() {
     input = $("#nom_installation").val();
     console.log(input);
@@ -119,6 +124,7 @@ function getInstallationById() {
     });
 }
 
+//Supprime une installation en fonction de son ID et affiche une confirmation
 function deleteInstallation(id) {
     $("#status").removeClass();
     $("#status").empty();
@@ -145,6 +151,7 @@ function deleteInstallation(id) {
     });
 }
 
+//Verifie qu'un champs ne soit pas vide, lors de la modification d'une installation
 function validation(input, tag) {
     var it = $(`#${tag}`);
     it.removeClass();
@@ -157,6 +164,7 @@ function validation(input, tag) {
     return true;
 }
 
+//Modifie les informations d'une installation et affiche une confirmation
 function editInstallation() {
     var status = $("#confirmation");
     status.removeClass();

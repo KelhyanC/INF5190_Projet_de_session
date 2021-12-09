@@ -39,10 +39,11 @@ loginfo = {
     "password": "secret"
 }
 
-# Pas possible de mettre le model BD dans un module car
+# Pas possible de mettre le model BD dans un module separe car
 # problème d'injection de dépendances entre BD, modèle et app
 
 
+# Modele Activite
 class Activite(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     type_installation = db.Column(db.String, nullable=False)
@@ -68,10 +69,9 @@ class Activite(db.Model):
         }
         return rep
 
+
 # Permet de lire les gros fichiers morceau par morceau
 # pour prevenir les problemes memoires
-
-
 def download_large_file(filename, url):
     comp_file = './data/'+filename
     with requests.get(url, stream=True) as req:
@@ -80,15 +80,17 @@ def download_large_file(filename, url):
                 f.write(it)
     return comp_file
 
+
 # Charge les patinoires a partir d'une requete GET
 # et les stocke dans le fichier patinoires.xml
 # Puis ajoute les patinoires dans la BD si elles n'y existent pas
-
-
 def load_patinoires():
     print("Chargement des patinoires : ")
+    url = ("https://data.montreal.ca/dataset/"
+           "225ac315-49fe-476f-95bd-a1ce1648a98c/resource/"
+           "5d1859cc-2060-4def-903f-db24408bacd0/download/l29-patinoire.xml")
     content = download_large_file(
-        'patinoires.xml', "https://data.montreal.ca/dataset/225ac315-49fe-476f-95bd-a1ce1648a98c/resource/5d1859cc-2060-4def-903f-db24408bacd0/download/l29-patinoire.xml")
+        'patinoires.xml', url)
     root = ET.parse(content)
     patinoires = []
     for arrondissement in root.findall('arrondissement'):
@@ -97,7 +99,8 @@ def load_patinoires():
         type = "patinoire"
         nom = str.strip(arrondissement.find('patinoire').find('nom_pat').text)
         act = Activite(id=id, type_installation=type,
-                       nom=nom, arrondissement=nom_arr, ajout_bd=datetime.now())
+                       nom=nom, arrondissement=nom_arr,
+                       ajout_bd=datetime.now())
         if(Activite.query.filter_by(nom=act.nom).first() is None):
             print("N'existe pas dans BD : ajout")
             patinoires.append(act)
@@ -115,8 +118,10 @@ def load_patinoires():
 # Puis ajoute les glissades dans la BD si elles n'y existent pas
 def load_glissades():
     print("Chargement des glissades : ")
+    url = ("http://www2.ville.montreal.qc.ca/services_citoyens/"
+           "pdf_transfert/L29_GLISSADE.xml")
     content = download_large_file(
-        'glissades.xml', "http://www2.ville.montreal.qc.ca/services_citoyens/pdf_transfert/L29_GLISSADE.xml")
+        'glissades.xml', url)
     root = ET.parse(content)
     glissades = []
     for glissade in root.findall('glissade'):
@@ -125,7 +130,8 @@ def load_glissades():
         type = "glissade"
         nom = glissade.find('nom').text
         act = Activite(id=id, type_installation=type,
-                       nom=nom, arrondissement=nom_arr, ajout_bd=datetime.now())
+                       nom=nom, arrondissement=nom_arr,
+                       ajout_bd=datetime.now())
         if(Activite.query.filter_by(nom=act.nom).first() is None):
             print("N'existe pas dans BD : ajout")
             glissades.append(act)
@@ -142,7 +148,9 @@ def load_glissades():
 # Puis les ajoute dans la BD si elles n'y existent pas
 def load_piscines():
     print("Chargement des piscines : ")
-    path = 'https://data.montreal.ca/dataset/4604afb7-a7c4-4626-a3ca-e136158133f2/resource/cbdca706-569e-4b4a-805d-9af73af03b14/download/piscines.csv'
+    path = ("https://data.montreal.ca/dataset/"
+            "4604afb7-a7c4-4626-a3ca-e136158133f2/resource/"
+            "cbdca706-569e-4b4a-805d-9af73af03b14/download/piscines.csv")
     dest = './data/piscines.csv'
     r.urlretrieve(path, dest)
     piscines = []
@@ -157,7 +165,8 @@ def load_piscines():
             type = row[1]
             nom = row[2]
             act = Activite(id=id, type_installation=type,
-                           nom=nom, arrondissement=nom_arr, ajout_bd=datetime.now())
+                           nom=nom, arrondissement=nom_arr,
+                           ajout_bd=datetime.now())
             if(Activite.query.filter_by(nom=act.nom).first() is None):
                 print("N'existe pas dans BD : ajout")
                 piscines.append(act)
@@ -170,8 +179,8 @@ def load_piscines():
         db.session.commit()
 
 
-# Fonction du Background Scheduler qui ajoute les patinoires, glissades et pisines
-# qui n'existent pas dans la BD
+# Fonction du Background Scheduler qui ajoute les patinoires,
+# glissades et piscines qui n'existent pas dans la BD
 def load_datas_scheduler():
     print("Mise à jour période des données tous les jours à 00:00 :")
     load_patinoires()
@@ -180,9 +189,10 @@ def load_datas_scheduler():
     print("Mise à jour périodique terminée")
 
 
-# Vérifie si la base de donnée existe, sinon la crée et charge toutes les données
+# Vérifie si la base de donnée existe,
+# sinon la crée et charge toutes les données
 # Le chargement des données peut être long
-if(isfile('db/database.db') == False):
+if(isfile('db/database.db') is False):
     print("Base de donnée inexistante : initialisation en cours...")
     db.create_all()
     load_patinoires()
@@ -197,7 +207,7 @@ job = job = scheduler.add_job(
 scheduler.start()
 
 
-# AFFICHER LES 3 DERNIERES DONNEES MAJ DE CHAQUE CATEGORIE PAR BACKGROUND SCHEDULER
+# Capture les erreurs de validation de schema JSON
 
 @app.errorhandler(JsonValidationError)
 def validation_error(err):
@@ -205,43 +215,55 @@ def validation_error(err):
     return jsonify({'Erreur': err.message, 'Details_erreur': errors}), 400
 
 
+# Route principale avec les installations chargees dans liste deroulante
 @app.route("/")
 def accueil():
     installations = Activite.query.all()
     return render_template("index.html", installations=installations)
 
 
+# Page de documentation generee a partir du fichier RAML
 @app.route("/doc")
 def read_the_doc():
     return render_template("doc.html")
 
 
+# Retourne une installation a partir de son ID si elle existe
 @app.route("/installation/<id>")
 def installation_details(id):
     installation = Activite.query.filter_by(id=id).first()
     if(installation is None):
         return render_template("installation.html"), 404
     else:
-        return render_template("installation.html", installation=installation), 200
+        return render_template("installation.html",
+                               installation=installation), 200
 
 
+# API qui retourne une liste d'installations par arrondissement
+# Recupere le nom d'installation dans les parametres d'url
 @app.route("/api/installations")
 def get_installations():
     arr = request.args['arrondissement']
     arrondissements = Activite.query.filter(
         Activite.arrondissement.ilike(arr)).all()
-    if arr.strip() == "" or not arr or arrondissements is None or len(arrondissements) == 0:
+    if (arr.strip() == "" or not arr or arrondissements is None
+            or len(arrondissements) == 0):
         return jsonify({"Erreur": "Arrondissement invalide"}), 404
     else:
         return jsonify([it.transformation() for it in arrondissements]), 200
 
 
+# API qui retourne, modifie et supprime une installation si elle existe
+# Pour supprimer une installation, il faut utiliser les identifiants
+# de connexion fournis dans l'objet loginfo
 @app.route("/api/installation/<id>", methods=["GET", "PATCH", "DELETE"])
 @schema.validate(activite_update_schema)
 def get_installation(id):
     installation = Activite.query.filter_by(id=id).first()
     if(installation is None):
-        return jsonify({"Erreur": "Aucune installation ne correspond à cet identifiant"}), 404
+        return jsonify(
+            {"Erreur":
+             "Aucune installation correspondante à cet identifiant"}), 404
     elif request.method == "GET":
         return jsonify(installation.transformation()), 200
     elif request.method == "PATCH":
@@ -249,21 +271,27 @@ def get_installation(id):
         name = req_data['nom']
         type_inst = req_data['type_installation']
         if name.strip() == "" or type_inst.strip() == "":
-            return jsonify({"Erreur": "Les données fournies ne peuvent pas être vides"}), 400
+            return jsonify(
+                {"Erreur":
+                 "Les données fournies ne peuvent pas être vides"}), 400
         Activite.query.filter_by(id=id).update(
-            dict(nom=name, type_installation=type_inst, ajout_bd=datetime.now()))
+            dict(nom=name, type_installation=type_inst,
+                 ajout_bd=datetime.now()))
         db.session.commit()
         new_data = Activite.query.filter_by(id=id).first().transformation()
         return jsonify(new_data), 200
     elif request.method == "DELETE":
         auth = request.authorization
-        if auth and auth.username == loginfo["username"] and auth.password == loginfo["password"]:
+        if (auth and auth.username == loginfo["username"] and
+                auth.password == loginfo["password"]):
             del_data = installation.transformation()
             Activite.query.filter_by(id=id).delete()
             db.session.commit()
             return jsonify(del_data), 200
         else:
-            return make_response('Permission refusée !', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
+            return make_response('Permission refusée !', 401,
+                                 {'WWW-Authenticate':
+                                  'Basic realm="Login Required"'})
 
 
 if __name__ == "__main__":
