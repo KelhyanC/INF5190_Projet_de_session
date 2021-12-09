@@ -109,5 +109,5 @@ Votre navigateur peut stocker les données de connexion, et la saisie des identi
 supprimer une installation. Dans ce cas, vous pouvez soit supprimer les données de navigation, soit modifier les champs `username` et `password` dans l'objet loginfo, ou soit dire merci à votre navigateur et profiter de ne plus vous faire embêter par les procédures d'authentification.
 
 Informations d'authentification :
-username : `superuser`
-password : `secret`
+- username : `superuser`
+- password : `secret`
